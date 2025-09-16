@@ -3,13 +3,18 @@ package com.example;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
-
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import java.io.File;
 
 public class FillPdfFields {
-    public static void main(String[] args) throws Exception {
-        File file = new File("form3.pdf"); // original
-        File output = new File("form3_filled.pdf");
+
+    public static void fillFields(File file, File output) throws Exception {
+   
+
+        if (!file.exists()) {
+            System.err.println("Error: form3.pdf not found in current directory");
+            return;
+        }
 
         try (PDDocument doc = Loader.loadPDF(file)) {
             PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
@@ -19,28 +24,48 @@ public class FillPdfFields {
                 return;
             }
 
+            System.out.println("=== Filling PDF Fields ===");
+
             // ✅ Fill text fields
-            form.getField("name").setValue("asd");
-            form.getField("address").setValue("123 Nguyen Trai, Hanoi");
-            form.getField("tax_code").setValue("0123456789");
-            form.getField("phone").setValue("0901234567");
+            setFieldValue(form, "name", "asd");
+            setFieldValue(form, "address", "123 Nguyen Trai, Hanoi");
+            setFieldValue(form, "tax_code", "0123456789");
+            setFieldValue(form, "phone", "0901234567");
 
-            // ✅ Set checkboxes
-            // Checked
-            form.getField("chkRes").setValue("Yes"); // mark Resident
-            form.getField("chk1").setValue("Yes"); // check box 1
-            form.getField("chkCCY2").setValue("Yes"); // check CCY2
-            form.getField("chkMethod3").setValue("Yes"); // pick Method3
+            // ✅ Set checkboxes - Checked
+            setFieldValue(form, "chkRes", "Yes"); // mark Resident
+            setFieldValue(form, "chk1", "Yes"); // check box 1
+            setFieldValue(form, "chkCCY2", "Yes"); // check CCY2
+            setFieldValue(form, "chkMethod3", "Yes"); // pick Method3
 
-            // Unchecked
-            form.getField("chkNonRes").setValue("Off");
-            form.getField("chk2").setValue("Off");
-            form.getField("chkCCY1").setValue("Off");
-            form.getField("chkMethod1").setValue("Off");
+            // ✅ Set checkboxes - Unchecked
+            setFieldValue(form, "chkNonRes", "Off");
+            setFieldValue(form, "chk2", "Off");
+            setFieldValue(form, "chkCCY1", "Off");
+            setFieldValue(form, "chkMethod1", "Off");
 
             // ✅ Save
             doc.save(output);
-            System.out.println("Filled PDF saved to: " + output.getAbsolutePath());
+            System.out.println("✅ Filled PDF saved to: " + output.getAbsolutePath());
+        }
+    }
+
+
+
+    /**
+     * Helper method to safely set field values
+     */
+    private static void setFieldValue(PDAcroForm form, String fieldName, String value) {
+        try {
+            PDField field = form.getField(fieldName);
+            if (field != null) {
+                field.setValue(value);
+                System.out.println("✅ Set field '" + fieldName + "' = '" + value + "'");
+            } else {
+                System.out.println("⚠️  Field '" + fieldName + "' not found");
+            }
+        } catch (Exception e) {
+            System.out.println("❌ Error setting field '" + fieldName + "': " + e.getMessage());
         }
     }
 }

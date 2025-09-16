@@ -2,6 +2,8 @@ package com.example;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDBorderStyleDictionary;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 
@@ -55,7 +57,16 @@ public class FillPdfFields {
             try {
                 form.refreshAppearances();
             } catch (Throwable ignored) {
-                // Older/newer PDFBox variations: safe to ignore if not available
+                // PDFBox version differences, safe to ignore
+            }
+            for (PDField field : form.getFieldTree()) {
+                for (PDAnnotationWidget widget : field.getWidgets()) {
+                    if (widget.getBorderStyle() == null) {
+                        PDBorderStyleDictionary border = new PDBorderStyleDictionary();
+                        border.setWidth(1); // 1pt border
+                        widget.setBorderStyle(border);
+                    }
+                }
             }
 
             // 🔒 Disable the form
